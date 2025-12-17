@@ -1,4 +1,4 @@
-/* CSS/style.css */
+/* css/style.css */
 
 html,
 body {
@@ -18,7 +18,7 @@ body {
   max-width: 900px;
   margin: 20px auto;
   background-color: #ffffffee;
-  padding: 20px 30px 80px; /* Espacio para el botón fijo inferior */
+  padding: 20px 30px 80px;
   border-radius: 15px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
   position: relative;

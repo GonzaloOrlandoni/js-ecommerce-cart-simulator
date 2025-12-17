@@ -1,4 +1,5 @@
 // js/simulador.js
+import { productos } from "./productos.js"; // IMPORTA LOS DATOS DE productos.js
 
 // --- ESTADO DE LA APLICACIÓN ---
 let carrito = JSON.parse(localStorage.getItem("carrito")) || [];
@@ -10,17 +11,14 @@ const cupones = {
 
 // --- FUNCIONES AUXILIARES ---
 
-/** Formatea un valor numérico a moneda argentina. */
 function moneda(valor) {
   return new Intl.NumberFormat("es-AR", { style: "currency", currency: "ARS" }).format(valor);
 }
 
-/** Guarda el estado actual del carrito en localStorage. */
 function guardarCarrito() {
   localStorage.setItem("carrito", JSON.stringify(carrito));
 }
 
-/** Calcula el total numérico de la compra aplicando descuentos. */
 function calcularTotalNumerico() {
   let total = carrito.reduce((acc, item) => acc + item.precio * item.cantidad, 0);
   if (descuento > 0) total -= total * descuento;
@@ -29,7 +27,6 @@ function calcularTotalNumerico() {
 
 // --- RENDERIZADO DEL DOM ---
 
-/** Dibuja la lista de productos disponibles en el DOM. */
 function renderizarProductos(productos) {
   const contenedor = document.getElementById("productos");
   contenedor.innerHTML = "";
@@ -48,7 +45,6 @@ function renderizarProductos(productos) {
   });
 }
 
-/** Dibuja el contenido actual del carrito. */
 function renderizarCarrito() {
   const contenedor = document.getElementById("carrito");
   contenedor.innerHTML = "";
@@ -70,7 +66,6 @@ function renderizarCarrito() {
   actualizarTotal();
 }
 
-/** Actualiza el total de la compra en el DOM. */
 function actualizarTotal() {
   const total = calcularTotalNumerico();
   document.getElementById("total").textContent = "Total: " + moneda(total);
@@ -168,33 +163,14 @@ function finalizarCompra() {
   });
 }
 
-// --- INICIALIZACIÓN Y CARGA DE DATOS ---
+// --- INICIALIZACIÓN Y EJECUCIÓN ---
 
-/** Realiza la solicitud (fetch) de los productos desde data.json. */
-async function fetchProductos() {
-  try {
-    const response = await fetch("./data.json");
-    if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-    return await response.json();
-  } catch (error) {
-    // Muestra un error si Vercel/el navegador no encuentra data.json (404)
-    console.error("No se pudieron cargar los productos:", error);
-    Swal.fire("Error", "No se pudieron cargar los productos. Por favor, verifica el archivo data.json.", "error");
-    return null;
-  }
+function inicializar() {
+  renderizarProductos(productos); // Usa la variable productos IMPORTADA
+  renderizarCarrito();
+  document.getElementById("aplicarCupon").addEventListener("click", aplicarCupon);
+  document.getElementById("finalizar").addEventListener("click", finalizarCompra);
 }
 
-/** Función principal de inicialización. */
-async function inicializar() {
-  const productos = await fetchProductos();
-  if (productos) {
-    renderizarProductos(productos);
-    renderizarCarrito();
-    document.getElementById("aplicarCupon").addEventListener("click", aplicarCupon);
-    document.getElementById("finalizar").addEventListener("click", finalizarCompra);
-  }
-}
-
-// --- EJECUCIÓN ---
 // Esperamos a que el DOM esté completamente cargado para ejecutar el script
 document.addEventListener("DOMContentLoaded", inicializar);
