@@ -9,14 +9,18 @@ const cupones = {
 };
 
 // --- FUNCIONES AUXILIARES ---
+
+/** Formatea un valor numérico a moneda argentina. */
 function moneda(valor) {
   return new Intl.NumberFormat("es-AR", { style: "currency", currency: "ARS" }).format(valor);
 }
 
+/** Guarda el estado actual del carrito en localStorage. */
 function guardarCarrito() {
   localStorage.setItem("carrito", JSON.stringify(carrito));
 }
 
+/** Calcula el total numérico de la compra aplicando descuentos. */
 function calcularTotalNumerico() {
   let total = carrito.reduce((acc, item) => acc + item.precio * item.cantidad, 0);
   if (descuento > 0) total -= total * descuento;
@@ -24,6 +28,8 @@ function calcularTotalNumerico() {
 }
 
 // --- RENDERIZADO DEL DOM ---
+
+/** Dibuja la lista de productos disponibles en el DOM. */
 function renderizarProductos(productos) {
   const contenedor = document.getElementById("productos");
   contenedor.innerHTML = "";
@@ -31,9 +37,9 @@ function renderizarProductos(productos) {
     const div = document.createElement("div");
     div.classList.add("producto");
     div.innerHTML = `
-      <h3>${p.nombre}</h3>
-      <p>${moneda(p.precio)}</p>
-    `;
+            <h3>${p.nombre}</h3>
+            <p>${moneda(p.precio)}</p>
+        `;
     const boton = document.createElement("button");
     boton.innerText = "Agregar";
     boton.addEventListener("click", () => agregarAlCarrito(p));
@@ -42,6 +48,7 @@ function renderizarProductos(productos) {
   });
 }
 
+/** Dibuja el contenido actual del carrito. */
 function renderizarCarrito() {
   const contenedor = document.getElementById("carrito");
   contenedor.innerHTML = "";
@@ -54,21 +61,23 @@ function renderizarCarrito() {
     const div = document.createElement("div");
     div.classList.add("carrito-item");
     div.innerHTML = `
-      <span>${item.cantidad} x ${item.nombre} - ${moneda(item.precio * item.cantidad)}</span>
-      <button class="btn-eliminar">❌</button>
-    `;
+            <span>${item.cantidad} x ${item.nombre} - ${moneda(item.precio * item.cantidad)}</span>
+            <button class="btn-eliminar">❌</button>
+        `;
     div.querySelector(".btn-eliminar").addEventListener("click", () => eliminarDelCarrito(index));
     contenedor.appendChild(div);
   });
   actualizarTotal();
 }
 
+/** Actualiza el total de la compra en el DOM. */
 function actualizarTotal() {
   const total = calcularTotalNumerico();
   document.getElementById("total").textContent = "Total: " + moneda(total);
 }
 
 // --- LÓGICA DE NEGOCIO ---
+
 function agregarAlCarrito(producto) {
   const itemExistente = carrito.find((i) => i.id === producto.id);
   if (itemExistente) {
@@ -77,8 +86,9 @@ function agregarAlCarrito(producto) {
     carrito.push({ ...producto, cantidad: 1 });
   }
   guardarCarrito();
-  renderizarCarrito(); // Notificación Toastify
+  renderizarCarrito();
 
+  // Notificación Toastify
   Toastify({
     text: `Se agregó "${producto.nombre}" al carrito`,
     duration: 2000,
@@ -93,8 +103,9 @@ function eliminarDelCarrito(index) {
   const itemEliminado = carrito[index];
   carrito.splice(index, 1);
   guardarCarrito();
-  renderizarCarrito(); // Notificación Toastify
+  renderizarCarrito();
 
+  // Notificación Toastify
   Toastify({
     text: `Se eliminó "${itemEliminado.nombre}" del carrito`,
     duration: 2000,
@@ -158,6 +169,22 @@ function finalizarCompra() {
 }
 
 // --- INICIALIZACIÓN Y CARGA DE DATOS ---
+
+/** Realiza la solicitud (fetch) de los productos desde data.json. */
+async function fetchProductos() {
+  try {
+    const response = await fetch("./data.json");
+    if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+    return await response.json();
+  } catch (error) {
+    // Muestra un error si Vercel/el navegador no encuentra data.json (404)
+    console.error("No se pudieron cargar los productos:", error);
+    Swal.fire("Error", "No se pudieron cargar los productos. Por favor, verifica el archivo data.json.", "error");
+    return null;
+  }
+}
+
+/** Función principal de inicialización. */
 async function inicializar() {
   const productos = await fetchProductos();
   if (productos) {
@@ -165,18 +192,6 @@ async function inicializar() {
     renderizarCarrito();
     document.getElementById("aplicarCupon").addEventListener("click", aplicarCupon);
     document.getElementById("finalizar").addEventListener("click", finalizarCompra);
-  }
-}
-
-async function fetchProductos() {
-  try {
-    const response = await fetch("./data.json");
-    if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-    return await response.json();
-  } catch (error) {
-    console.error("No se pudieron cargar los productos:", error);
-    Swal.fire("Error", "No se pudieron cargar los productos. Por favor, intenta recargar la página.", "error");
-    return null;
   }
 }
 
